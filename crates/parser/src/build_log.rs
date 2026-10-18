@@ -1,7 +1,7 @@
 use std::{cmp::Ordering, path::PathBuf};
 
 use once_cell::sync::Lazy;
-use regex::{Match, Regex};
+use regex::Regex;
 use syntax::{BuildError, BuildErrorLevel, BuildLog};
 
 const MAX_LINE_LENGTH: usize = 79;
@@ -9,12 +9,18 @@ const MAX_LINE_LENGTH: usize = 79;
 static PACKAGE_MESSAGE_REGEX: Lazy<Regex> =
     Lazy::new(|| Regex::new("^\\([a-zA-Z_\\-]+\\)\\s*(?P<msg>.*)$").unwrap());
 
-static FILE_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new("\\((?P<file>[^\r\n()]+\\.(tex|sty|cls))").unwrap());
-
+// Keep error blocks separate: an error without `l.N` must not borrow the
+// location of a later error. Explicit file:line locations take precedence over
+// the ambiguous parenthesis-based file stack in traditional TeX logs.
 static TEX_ERROR_REGEX: Lazy<Regex> = Lazy::new(|| {
-    Regex::new("(?m)^! ((?P<msg1>(.|\r|\n)*?)\r?\nl\\.(?P<line>\\d+)( (\\.\\.\\.)?(?P<hint>[^\r\n]+))?|(?P<msg2>[^\r\n]*))").unwrap()
+    Regex::new(
+        r#"(?m)^(?:! (?P<msg>[^\r\n]*)|(?P<file>[^\r\n]+?\.[A-Za-z0-9_-]+"?):(?P<line>\d+): (?P<file_msg>[^\r\n]*))"#,
+    )
+    .unwrap()
 });
+
+static CONTEXT_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?m)^l\.(?P<line>\d+)(?: (?P<hint>[^\r\n]*))?\r?$").unwrap());
 
 static WARNING_REGEX: Lazy<Regex> = Lazy::new(|| {
     Regex::new("(?P<msg>(LaTeX|Package [a-zA-Z_\\-]+) Warning: [^\r\n]*?(on input line (?P<line>\\d+))?\\.)[\r\n]").unwrap()
@@ -26,18 +32,77 @@ static BAD_BOX_REGEX: Lazy<Regex> = Lazy::new(|| {
 
 pub fn parse_build_log(log: &str) -> BuildLog {
     let log = prepare_log(log);
-    let mut ranges: Vec<FileRange> = FILE_REGEX
-        .find_iter(&log)
-        .map(|result| FileRange::create(&log, result))
+    let mut ranges: Vec<FileRange> = log
+        .match_indices('(')
+        .filter_map(|(start, _)| FileRange::create(&log, start))
         .collect();
     ranges.sort();
 
-    let tex_errors = extract_matches(&log, &ranges, &TEX_ERROR_REGEX, BuildErrorLevel::Error);
+    let tex_errors = extract_errors(&log, &ranges);
     let warnings = extract_matches(&log, &ranges, &WARNING_REGEX, BuildErrorLevel::Warning);
     let bad_boxes = extract_matches(&log, &ranges, &BAD_BOX_REGEX, BuildErrorLevel::Warning);
 
     let errors = [tex_errors, warnings, bad_boxes].concat();
     BuildLog { errors }
+}
+
+fn parse_line(value: &str) -> Option<u32> {
+    value.parse::<u32>().ok()?.checked_sub(1)
+}
+
+fn extract_errors(log: &str, ranges: &[FileRange]) -> Vec<BuildError> {
+    let headers: Vec<_> = TEX_ERROR_REGEX
+        .captures_iter(log)
+        .filter(|header| !CONTEXT_REGEX.is_match(&header[0]))
+        .collect();
+    let mut errors = Vec::new();
+    for (index, header) in headers.iter().enumerate() {
+        let start = header.get(0).unwrap();
+        let end = headers
+            .get(index + 1)
+            .map_or(log.len(), |next| next.get(0).unwrap().start());
+        let context = CONTEXT_REGEX.captures(&log[start.end()..end]);
+        let context_line = context.as_ref().and_then(|c| parse_line(&c["line"]));
+        let explicit = header.name("file");
+        let line = if explicit.is_some() {
+            header.name("line").and_then(|m| parse_line(m.as_str()))
+        } else {
+            context_line
+        };
+        let hint = context
+            .filter(|_| line.is_some() && line == context_line)
+            .and_then(|c| c.name("hint"))
+            .map(|m| {
+                m.as_str()
+                    .trim()
+                    .strip_prefix("...")
+                    .unwrap_or(m.as_str().trim())
+                    .to_owned()
+            });
+        let path = explicit
+            .map(|m| PathBuf::from(m.as_str().trim_matches('"')))
+            .or_else(|| {
+                ranges
+                    .iter()
+                    .find(|r| r.contains(start.start()))
+                    .map(|r| r.path.clone())
+            });
+        if let Some(relative_path) = path {
+            errors.push(BuildError {
+                relative_path,
+                level: BuildErrorLevel::Error,
+                message: header
+                    .name("msg")
+                    .or_else(|| header.name("file_msg"))
+                    .unwrap()
+                    .as_str()
+                    .to_owned(),
+                line,
+                hint,
+            });
+        }
+    }
+    errors
 }
 
 fn extract_matches(
@@ -63,7 +128,7 @@ fn extract_matches(
         if let Some(range) = ranges.iter().find(|range| range.contains(result.start())) {
             let line = captures
                 .name("line")
-                .map(|result| result.as_str().parse::<u32>().unwrap() - 1);
+                .and_then(|result| parse_line(result.as_str()));
 
             let hint: Option<String> = if line.is_some() {
                 captures
@@ -86,7 +151,7 @@ fn extract_matches(
 }
 
 fn prepare_log(log: &str) -> String {
-    let mut old_lines = log.lines();
+    let mut old_lines = log.lines().peekable();
     let mut new_lines: Vec<String> = Vec::new();
     while let Some(line) = old_lines.next() {
         if PACKAGE_MESSAGE_REGEX.is_match(line) {
@@ -95,16 +160,14 @@ fn prepare_log(log: &str) -> String {
                 last_line.push(' ');
                 last_line.push_str(captures.name("msg").unwrap().as_str());
             }
-        } else if line.ends_with("...") {
-            let mut new_line = line[line.len() - 3..].to_owned();
-            if let Some(old_line) = old_lines.next() {
-                new_line.push_str(old_line);
-            }
-            new_lines.push(new_line);
         } else if line.chars().count() == MAX_LINE_LENGTH {
             let mut new_line = String::new();
             new_line.push_str(line);
-            for old_line in old_lines.by_ref() {
+            while let Some(&old_line) = old_lines.peek() {
+                if TEX_ERROR_REGEX.is_match(old_line) || CONTEXT_REGEX.is_match(old_line) {
+                    break;
+                }
+                old_lines.next();
                 new_line.push_str(old_line);
                 if old_line.chars().count() != MAX_LINE_LENGTH {
                     break;
@@ -126,30 +189,23 @@ struct FileRange {
 }
 
 impl FileRange {
-    fn create(log: &str, result: Match) -> Self {
+    fn create(log: &str, start: usize) -> Option<Self> {
+        let (path, path_end) = file_name(log, start + 1)?;
         let mut balance = 1;
-        let mut end = result.start() + 1;
-        let chars = log[result.start() + 1..].chars();
-        for c in chars {
+        let mut end = path_end;
+        // Parentheses belonging to the filename are not file-stack markers.
+        for c in log[path_end..].chars() {
             if balance <= 0 {
                 break;
             }
-
-            if c == '(' {
-                balance += 1;
-            } else if c == ')' {
-                balance -= 1;
+            match c {
+                '(' => balance += 1,
+                ')' => balance -= 1,
+                _ => {}
             }
             end += c.len_utf8();
         }
-
-        let captures = FILE_REGEX.captures(result.as_str()).unwrap();
-        let path = PathBuf::from(captures.name("file").unwrap().as_str());
-        Self {
-            path,
-            start: result.start(),
-            end,
-        }
+        Some(Self { path, start, end })
     }
 
     fn len(&self) -> usize {
@@ -159,6 +215,39 @@ impl FileRange {
     fn contains(&self, index: usize) -> bool {
         index >= self.start && index <= self.end
     }
+}
+
+fn file_name(log: &str, start: usize) -> Option<(PathBuf, usize)> {
+    let line = log[start..].split(['\r', '\n']).next()?;
+    let supported = |path: &str| {
+        [".tex", ".sty", ".cls"]
+            .iter()
+            .any(|ext| path.ends_with(ext))
+    };
+    if let Some(quoted) = line.strip_prefix('"') {
+        let end = quoted.find('"')?;
+        let path = &quoted[..end];
+        return supported(path).then(|| (path.into(), start + end + 2));
+    }
+
+    let mut balance = 0;
+    let mut chars = line.char_indices().peekable();
+    while let Some((index, c)) = chars.next() {
+        match c {
+            '(' => balance += 1,
+            ')' if balance == 0 => return None,
+            ')' => balance -= 1,
+            _ => {}
+        }
+        let end = index + c.len_utf8();
+        let boundary = chars
+            .peek()
+            .is_none_or(|(_, next)| next.is_whitespace() || matches!(next, ')' | '('));
+        if balance == 0 && boundary && supported(&line[..end]) {
+            return Some((line[..end].into(), start + end));
+        }
+    }
+    None
 }
 
 impl Ord for FileRange {

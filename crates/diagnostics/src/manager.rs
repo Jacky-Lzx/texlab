@@ -13,7 +13,6 @@ use crate::types::Diagnostic;
 pub struct Manager {
     grammar: MultiMap<Url, Diagnostic>,
     chktex: FxHashMap<Url, Vec<Diagnostic>>,
-    build_log: FxHashMap<Url, MultiMap<Url, Diagnostic>>,
 }
 
 impl Manager {
@@ -26,9 +25,6 @@ impl Manager {
         self.grammar.remove(&document.uri);
         super::grammar::tex::update(document, workspace.config(), &mut self.grammar);
         super::grammar::bib::update(document, &mut self.grammar);
-
-        self.build_log.remove(&document.uri);
-        super::build_log::update(workspace, document, &mut self.build_log);
     }
 
     /// Updates the ChkTeX diagnostics for the given document.
@@ -45,7 +41,6 @@ impl Manager {
 
         self.grammar.retain(|uri, _| uris.contains(uri));
         self.chktex.retain(|uri, _| uris.contains(uri));
-        self.build_log.retain(|uri, _| uris.contains(uri));
     }
 
     /// Returns all filtered diagnostics for the given workspace.
@@ -58,7 +53,17 @@ impl Manager {
                 .extend(diagnostics.iter().cloned());
         }
 
-        for (uri, diagnostics) in self.build_log.values().flatten() {
+        // Resolve already-parsed log errors against the current project graph
+        // and source text. Cached source ranges become stale after source edits
+        // or a change to the configured log directory.
+        let mut build_log = FxHashMap::default();
+        for document in workspace
+            .iter()
+            .filter(|document| Self::is_relevant_document(document))
+        {
+            super::build_log::update(workspace, document, &mut build_log);
+        }
+        for (uri, diagnostics) in build_log.values().flatten() {
             results
                 .entry(uri.clone())
                 .or_default()

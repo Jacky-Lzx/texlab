@@ -266,14 +266,22 @@ impl Graph {
             .make_relative(&start.source.uri)
             .unwrap();
 
-        self.add_artifact(
+        let found = self.add_artifact(
             workspace,
             start.source,
             &dir.join(&relative_path).unwrap(),
             extension,
         );
+        // Only one build log belongs to a source file. Once the configured
+        // location exists, fallback locations may contain stale build errors.
+        if found && extension == "log" {
+            return;
+        }
 
-        self.add_artifact(workspace, start.source, &dir, extension);
+        let found = self.add_artifact(workspace, start.source, &dir, extension);
+        if found && extension == "log" {
+            return;
+        }
         self.add_artifact(workspace, start.source, &start.root.compile_dir, extension);
     }
 
@@ -283,7 +291,7 @@ impl Graph {
         source: &Document,
         dir: &Url,
         extension: &str,
-    ) {
+    ) -> bool {
         let mut path = PathBuf::from(
             percent_decode_str(source.uri.path())
                 .decode_utf8_lossy()
@@ -296,7 +304,7 @@ impl Graph {
             .and_then(OsStr::to_str)
             .and_then(|name| dir.join(name).ok())
         else {
-            return;
+            return false;
         };
 
         match workspace.lookup(&target_uri) {
@@ -306,9 +314,11 @@ impl Graph {
                     target: target.uri.clone(),
                     data: EdgeData::Artifact,
                 });
+                true
             }
             None => {
                 self.missing.push(target_uri);
+                false
             }
         }
     }

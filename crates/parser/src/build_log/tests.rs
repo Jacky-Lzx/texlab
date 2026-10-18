@@ -1226,3 +1226,144 @@ PDF statistics:
         "#]],
     );
 }
+
+#[test]
+fn test_file_line_errors_with_explicit_paths() {
+    let log = parse_build_log(
+        "(./main.tex\n(./child(draft).tex\n)\n./child(draft).tex:8: Undefined control sequence.\nl.8 Before \\bad\n after text.\nC:\\work\\中文.tex:12: Missing $ inserted.\nl.12 x_\n)",
+    );
+    assert_eq!(log.errors.len(), 2);
+    assert_eq!(
+        log.errors[0].relative_path,
+        std::path::PathBuf::from("./child(draft).tex")
+    );
+    assert_eq!(log.errors[0].line, Some(7));
+    assert_eq!(log.errors[0].message, "Undefined control sequence.");
+    assert_eq!(log.errors[0].hint.as_deref(), Some("Before \\bad"));
+    assert_eq!(
+        log.errors[1].relative_path,
+        std::path::PathBuf::from("C:\\work\\中文.tex")
+    );
+    assert_eq!(log.errors[1].line, Some(11));
+}
+
+#[test]
+fn test_parentheses_in_file_names() {
+    let log = parse_build_log(
+        "(./main.tex\n(./child(draft).tex\n! Undefined control sequence.\nl.8 Before \\bad\n)\n! Missing $ inserted.\nl.3 x_\n)",
+    );
+    assert_eq!(log.errors.len(), 2);
+    assert_eq!(
+        log.errors[0].relative_path,
+        std::path::PathBuf::from("./child(draft).tex")
+    );
+    assert_eq!(
+        log.errors[1].relative_path,
+        std::path::PathBuf::from("./main.tex")
+    );
+}
+
+#[test]
+fn test_quoted_file_names_with_parentheses_and_spaces() {
+    let log = parse_build_log(
+        "(\"./main (draft).tex\"\n! Undefined control sequence.\nl.3 Before \\bad\n)",
+    );
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(
+        log.errors[0].relative_path,
+        std::path::PathBuf::from("./main (draft).tex")
+    );
+}
+
+#[test]
+fn test_errors_do_not_steal_later_line_numbers() {
+    let log = parse_build_log(
+        "(./main.tex\n! Emergency stop.\n<*> main.tex\n! Undefined control sequence.\nl.8 Before \\bad\n)",
+    );
+    assert_eq!(log.errors.len(), 2);
+    assert_eq!(log.errors[0].line, None);
+    assert_eq!(log.errors[1].line, Some(7));
+}
+
+#[test]
+fn test_file_line_errors_without_file_stack_or_context() {
+    let log = parse_build_log("./child.tex:8: Undefined control sequence.\n");
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(log.errors[0].line, Some(7));
+    assert_eq!(log.errors[0].hint, None);
+}
+
+#[test]
+fn test_explicit_line_number_wins_over_inconsistent_context() {
+    let log = parse_build_log("./child.tex:8: Undefined control sequence.\nl.3 \\other\n");
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(log.errors[0].line, Some(7));
+    assert_eq!(log.errors[0].hint, None);
+}
+
+#[test]
+fn test_invalid_error_line_numbers_do_not_panic() {
+    for line in ["0", "999999999999999999999999"] {
+        let log = parse_build_log(&format!(
+            "(./main.tex\n! Undefined control sequence.\nl.{line} \\bad\n)"
+        ));
+        assert_eq!(log.errors.len(), 1);
+        assert_eq!(log.errors[0].line, None);
+    }
+}
+
+#[test]
+fn test_ellipsis_does_not_discard_the_next_error() {
+    let log = parse_build_log(
+        "(./main.tex\nLoading something...\n! Undefined control sequence.\nl.3 \\bad\n)",
+    );
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(log.errors[0].line, Some(2));
+}
+
+#[test]
+fn test_source_context_is_not_a_file_line_error() {
+    let log = parse_build_log(
+        "(./main.tex\n! Undefined control sequence.\nl.3 See example.tex:8: text \\bad\n)",
+    );
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(
+        log.errors[0].relative_path,
+        std::path::PathBuf::from("./main.tex")
+    );
+    assert_eq!(log.errors[0].line, Some(2));
+}
+
+#[test]
+fn test_file_line_header_wrapped_at_print_width() {
+    let path = format!("/{}main.tex", "a".repeat(60));
+    let header = format!("{path}:8: Undefined control sequence.");
+    let input = format!("{}\n{}\nl.8 \\bad\n", &header[..79], &header[79..]);
+    let log = parse_build_log(&input);
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(log.errors[0].message, "Undefined control sequence.");
+    assert_eq!(log.errors[0].relative_path, std::path::PathBuf::from(path));
+    assert_eq!(log.errors[0].hint.as_deref(), Some("\\bad"));
+}
+
+#[test]
+fn test_print_width_line_does_not_swallow_next_error() {
+    let log = parse_build_log(&format!(
+        "(./main.tex\n{}\n! Undefined control sequence.\nl.3 \\bad\n)",
+        "a".repeat(79)
+    ));
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(log.errors[0].line, Some(2));
+}
+
+#[test]
+fn test_quoted_file_line_path() {
+    let log =
+        parse_build_log("\"./child (draft).tex\":8: Undefined control sequence.\nl.8 \\bad\n");
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(
+        log.errors[0].relative_path,
+        std::path::PathBuf::from("./child (draft).tex")
+    );
+    assert_eq!(log.errors[0].line, Some(7));
+}
