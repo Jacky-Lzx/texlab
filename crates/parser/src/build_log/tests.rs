@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use expect_test::{Expect, expect};
 
 use crate::parse_build_log;
@@ -1366,4 +1368,80 @@ fn test_quoted_file_line_path() {
         std::path::PathBuf::from("./child (draft).tex")
     );
     assert_eq!(log.errors[0].line, Some(7));
+}
+
+#[test]
+fn test_traditional_input_extensions_and_case() {
+    for extension in [
+        "def", "ltx", "TEX", "STY", "cls", "clo", "cfg", "fd", "lco", "rnw",
+    ] {
+        let log = parse_build_log(&format!(
+            "(./main.tex\n(./child.{extension}\n! Undefined control sequence.\nl.1 Before \\bad\n)\n! Undefined control sequence.\nl.4 Before \\rootbad\n)"
+        ));
+        assert_eq!(log.errors.len(), 2, "{extension}");
+        assert_eq!(
+            log.errors[0].relative_path,
+            PathBuf::from(format!("./child.{extension}")),
+            "{extension}"
+        );
+        assert_eq!(
+            log.errors[1].relative_path,
+            PathBuf::from("./main.tex"),
+            "{extension}"
+        );
+    }
+}
+
+#[test]
+fn test_error_context_with_crlf_and_without_final_newline() {
+    for input in [
+        "(./main.tex\r\n! Undefined control sequence.\r\nl.3 Before \\bad\r\n)",
+        "./main.tex:3: Undefined control sequence.\r\nl.3 Before \\bad",
+    ] {
+        let log = parse_build_log(input);
+        assert_eq!(log.errors.len(), 1);
+        assert_eq!(log.errors[0].line, Some(2));
+        assert_eq!(log.errors[0].hint.as_deref(), Some("Before \\bad"));
+    }
+}
+
+#[test]
+fn test_macro_expansion_context_does_not_replace_call_site() {
+    let log = parse_build_log(
+        "./main.tex:4: Undefined control sequence.\n\\wrapper ->\\badinside \n                      \nl.4 Before \\wrapper\n                    after.\n",
+    );
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(log.errors[0].line, Some(3));
+    assert_eq!(log.errors[0].hint.as_deref(), Some("Before \\wrapper"));
+}
+
+#[test]
+fn test_multiline_argument_uses_compiler_reported_line() {
+    let log = parse_build_log(
+        "./main.tex:6: Undefined control sequence.\n<argument> Before \\badargument\n\nl.6 }\n",
+    );
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(log.errors[0].line, Some(5));
+    assert_eq!(log.errors[0].hint.as_deref(), Some("}"));
+}
+
+#[test]
+fn test_fatal_error_does_not_reuse_emergency_stop_context() {
+    let log = parse_build_log(
+        "(./main.tex\n! LaTeX Error: File `missing.tex' not found.\n! Emergency stop.\nl.3 \\input{missing}\n!  ==> Fatal error occurred, no output PDF file produced!\n)",
+    );
+    assert_eq!(log.errors.len(), 3);
+    assert_eq!(log.errors[0].line, None);
+    assert_eq!(log.errors[1].line, Some(2));
+    assert_eq!(log.errors[2].line, None);
+}
+
+#[test]
+fn test_file_line_paths_keep_uri_reserved_characters_literal() {
+    let log = parse_build_log("./draft #1%/child.tex:3: Undefined control sequence.\nl.3 \\bad\n");
+    assert_eq!(log.errors.len(), 1);
+    assert_eq!(
+        log.errors[0].relative_path,
+        PathBuf::from("./draft #1%/child.tex")
+    );
 }

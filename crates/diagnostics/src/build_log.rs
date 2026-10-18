@@ -20,14 +20,34 @@ pub fn update(
     let parents = deps::parents(workspace, log_document);
     let root_document = parents.iter().next()?;
 
-    let base_path = root_document
+    // Log paths are relative to the compiler's working directory, which can
+    // differ from the main source directory (e.g. src/main.tex + .texlabroot).
+    let root = deps::ProjectRoot::walk_and_find(workspace, root_document.dir.as_ref()?);
+    // latexmk -cd can change the inner compiler's directory. Its companion
+    // recorder file records that actual directory, independently of where the
+    // log or the project root is located.
+    let recorded_dir = log_document
         .path
-        .as_deref()
-        .and_then(|path| path.parent())?;
+        .as_ref()
+        .and_then(|path| Url::from_file_path(path.with_extension("fls")).ok())
+        .and_then(|uri| workspace.lookup(&uri))
+        .and_then(|document| document.data.as_file_list())
+        .and_then(|file_list| file_list.working_dir.as_deref())
+        .filter(|path| path.is_absolute());
+    let base_path = recorded_dir
+        .map(|dir| dir.to_owned())
+        .or_else(|| root.compile_dir.to_file_path().ok())?;
 
     for error in &data.errors {
         let full_path = base_path.join(&error.relative_path);
         let Ok(full_path_uri) = Url::from_file_path(&full_path) else {
+            continue;
+        };
+        // from_file_path preserves parent-directory segments, whereas source
+        // URIs are normalized during discovery. Parse the encoded URI to
+        // normalize those segments without requiring the source to be on disk
+        // or interpreting literal '#' and '%' in a filename as URI syntax.
+        let Ok(full_path_uri) = Url::parse(full_path_uri.as_str()) else {
             continue;
         };
 

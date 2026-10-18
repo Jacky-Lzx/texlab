@@ -1,0 +1,1466 @@
+[
+  {
+    "name": "two-errors-one-line-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\badfirst between \\badsecond after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badfirst",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badsecond",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "two-errors-one-line-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\badfirst between \\badsecond after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badfirst",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badsecond",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "errors-on-separate-lines-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nFirst \\badfirst\nSecond \\badsecond\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badfirst",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badsecond",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "errors-on-separate-lines-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nFirst \\badfirst\nSecond \\badsecond\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badfirst",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badsecond",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "repeated-truncated-context-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\samebad word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\samebad\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": null,
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": null,
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "repeated-truncated-context-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\samebad word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\samebad\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": null,
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": null,
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "macro-expansion-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\newcommand{\\wrapper}{\\badinside}\n\\begin{document}\nBefore \\wrapper after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\wrapper",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "macro-expansion-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\newcommand{\\wrapper}{\\badinside}\n\\begin{document}\nBefore \\wrapper after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\wrapper",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "nested-macro-expansion-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\newcommand{\\innerwrapper}{\\badinside}\n\\newcommand{\\outerwrapper}{\\innerwrapper}\n\\begin{document}\nBefore \\outerwrapper after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 5,
+        "token": "\\outerwrapper",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "nested-macro-expansion-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\newcommand{\\innerwrapper}{\\badinside}\n\\newcommand{\\outerwrapper}{\\innerwrapper}\n\\begin{document}\nBefore \\outerwrapper after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 5,
+        "token": "\\outerwrapper",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "multiline-macro-argument-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\newcommand{\\wrapper}[1]{#1}\n\\begin{document}\n\\wrapper{\nBefore \\badargument\n}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 6,
+        "token": null,
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "multiline-macro-argument-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\newcommand{\\wrapper}[1]{#1}\n\\begin{document}\n\\wrapper{\nBefore \\badargument\n}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 6,
+        "token": null,
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "edef-expansion-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\edef\\stored{\\badedef}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badedef",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "edef-expansion-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\edef\\stored{\\badedef}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badedef",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "control-symbol-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\? after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\?",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "control-symbol-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\? after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\?",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "at-letter-command-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\makeatletter Before \\bad@command after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\bad@command",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "at-letter-command-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\makeatletter Before \\bad@command after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\bad@command",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "internal-tab-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore\ttext \\badtab after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badtab",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "internal-tab-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore\ttext \\badtab after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badtab",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "multiple-spaces-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore     text \\badspaces after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badspaces",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "multiple-spaces-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore     text \\badspaces after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badspaces",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "literal-ellipsis-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n... Before \\badellipsis after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badellipsis",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "literal-ellipsis-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n... Before \\badellipsis after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badellipsis",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "comment-ignored-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nValid text. % \\notanerror\nBefore \\badcomment after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badcomment",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "comment-ignored-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nValid text. % \\notanerror\nBefore \\badcomment after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badcomment",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "utf16-non-bmp-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\iffalse 😀中文\\fi Before \\badunicode after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badunicode",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "utf16-non-bmp-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\iffalse 😀中文\\fi Before \\badunicode after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badunicode",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "narrow-context-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nprefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix \\badnarrow after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badnarrow",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false,
+    "env": {
+      "error_line": "60",
+      "half_error_line": "30"
+    }
+  },
+  {
+    "name": "narrow-context-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nprefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix prefix \\badnarrow after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badnarrow",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true,
+    "env": {
+      "error_line": "60",
+      "half_error_line": "30"
+    }
+  },
+  {
+    "name": "wide-context-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\badwide after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badwide",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false,
+    "env": {
+      "max_print_line": "1000",
+      "error_line": "254",
+      "half_error_line": "238"
+    }
+  },
+  {
+    "name": "wide-context-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\badwide after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badwide",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true,
+    "env": {
+      "max_print_line": "1000",
+      "error_line": "254",
+      "half_error_line": "238"
+    }
+  },
+  {
+    "name": "context-at-print-width-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\badwidth after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badwidth",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false,
+    "env": {
+      "error_line": "120",
+      "half_error_line": "79"
+    }
+  },
+  {
+    "name": "context-at-print-width-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\badwidth after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badwidth",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true,
+    "env": {
+      "error_line": "120",
+      "half_error_line": "79"
+    }
+  },
+  {
+    "name": "context-wrapped-mid-command-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\badwidth after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badwidth",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false,
+    "env": {
+      "error_line": "120",
+      "half_error_line": "80"
+    }
+  },
+  {
+    "name": "context-wrapped-mid-command-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nword word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word \\badwidth after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badwidth",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true,
+    "env": {
+      "error_line": "120",
+      "half_error_line": "80"
+    }
+  },
+  {
+    "name": "crlf-source-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\r\n\\begin{document}\r\nBefore \\badcrlf after.\r\n\\end{document}\r\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badcrlf",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "crlf-source-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\r\n\\begin{document}\r\nBefore \\badcrlf after.\r\n\\end{document}\r\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badcrlf",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "no-final-newline-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\badeof after.\n\\end{document}"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badeof",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "no-final-newline-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\badeof after.\n\\end{document}"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": "\\badeof",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "nested-siblings-classic",
+    "files": {
+      "left/chapter.tex": "Before \\badleft after.\n",
+      "right/chapter.tex": "Before \\badright after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{left/chapter}\n\\input{right/chapter}\nBefore \\badroot after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "left/chapter.tex",
+        "line": 1,
+        "token": "\\badleft",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "right/chapter.tex",
+        "line": 1,
+        "token": "\\badright",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 5,
+        "token": "\\badroot",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "nested-siblings-explicit",
+    "files": {
+      "left/chapter.tex": "Before \\badleft after.\n",
+      "right/chapter.tex": "Before \\badright after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{left/chapter}\n\\input{right/chapter}\nBefore \\badroot after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "left/chapter.tex",
+        "line": 1,
+        "token": "\\badleft",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "right/chapter.tex",
+        "line": 1,
+        "token": "\\badright",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 5,
+        "token": "\\badroot",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "include-child-classic",
+    "files": {
+      "chapters/child.tex": "Before \\badinclude after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\include{chapters/child}\nBefore \\badincludeparent after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "chapters/child.tex",
+        "line": 1,
+        "token": "\\badinclude",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badincludeparent",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "include-child-explicit",
+    "files": {
+      "chapters/child.tex": "Before \\badinclude after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\include{chapters/child}\nBefore \\badincludeparent after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "chapters/child.tex",
+        "line": 1,
+        "token": "\\badinclude",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badincludeparent",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "nested-parenthesized-path-classic",
+    "files": {
+      "chapters (draft)/child (v2).tex": "Before \\badpath after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{\"chapters (draft)/child (v2)\"}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "chapters (draft)/child (v2).tex",
+        "line": 1,
+        "token": "\\badpath",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "nested-parenthesized-path-explicit",
+    "files": {
+      "chapters (draft)/child (v2).tex": "Before \\badpath after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{\"chapters (draft)/child (v2)\"}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "chapters (draft)/child (v2).tex",
+        "line": 1,
+        "token": "\\badpath",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "quoted-unbalanced-parenthesis-classic",
+    "files": {
+      "child) draft.tex": "Before \\badquoted after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{\"child) draft\"}\nBefore \\badafterchild after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child) draft.tex",
+        "line": 1,
+        "token": "\\badquoted",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badafterchild",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false,
+    "known_limitation": "pdfLaTeX prints the filename without quotes; the unmatched parenthesis is ambiguous in a traditional file stack."
+  },
+  {
+    "name": "quoted-unbalanced-parenthesis-explicit",
+    "files": {
+      "child) draft.tex": "Before \\badquoted after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{\"child) draft\"}\nBefore \\badafterchild after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child) draft.tex",
+        "line": 1,
+        "token": "\\badquoted",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badafterchild",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "typeout-parenthesis-classic",
+    "files": {
+      "child.tex": "\\typeout{)}\nBefore \\badtypeout after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child}\nBefore \\badafterchild after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child.tex",
+        "line": 2,
+        "token": "\\badtypeout",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badafterchild",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false,
+    "known_limitation": "Arbitrary typeout text is indistinguishable from a traditional file-stack closing parenthesis."
+  },
+  {
+    "name": "typeout-parenthesis-explicit",
+    "files": {
+      "child.tex": "\\typeout{)}\nBefore \\badtypeout after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child}\nBefore \\badafterchild after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child.tex",
+        "line": 2,
+        "token": "\\badtypeout",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": "\\badafterchild",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "dot-segments-classic",
+    "files": {
+      "chapters/keep.tex": "",
+      "shared/child.tex": "Before \\baddots after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{chapters/../shared/child}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "shared/child.tex",
+        "line": 1,
+        "token": "\\baddots",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "dot-segments-explicit",
+    "files": {
+      "chapters/keep.tex": "",
+      "shared/child.tex": "Before \\baddots after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{chapters/../shared/child}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "shared/child.tex",
+        "line": 1,
+        "token": "\\baddots",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "unicode-filename-classic",
+    "files": {
+      "章节/草稿.tex": "Before \\badfilename after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{章节/草稿}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "章节/草稿.tex",
+        "line": 1,
+        "token": "\\badfilename",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "unicode-filename-explicit",
+    "files": {
+      "章节/草稿.tex": "Before \\badfilename after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{章节/草稿}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "章节/草稿.tex",
+        "line": 1,
+        "token": "\\badfilename",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "input-def-classic",
+    "files": {
+      "child.def": "Before \\badextension after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child.def}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child.def",
+        "line": 1,
+        "token": "\\badextension",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "input-def-explicit",
+    "files": {
+      "child.def": "Before \\badextension after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child.def}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child.def",
+        "line": 1,
+        "token": "\\badextension",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "input-ltx-classic",
+    "files": {
+      "child.ltx": "Before \\badextension after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child.ltx}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child.ltx",
+        "line": 1,
+        "token": "\\badextension",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "input-ltx-explicit",
+    "files": {
+      "child.ltx": "Before \\badextension after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child.ltx}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child.ltx",
+        "line": 1,
+        "token": "\\badextension",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "input-TEX-classic",
+    "files": {
+      "child.TEX": "Before \\badextension after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child.TEX}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child.TEX",
+        "line": 1,
+        "token": "\\badextension",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "input-TEX-explicit",
+    "files": {
+      "child.TEX": "Before \\badextension after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child.TEX}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "child.TEX",
+        "line": 1,
+        "token": "\\badextension",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "package-source-classic",
+    "files": {
+      "broken.sty": "\\ProvidesPackage{broken}\n\\badpackage\n",
+      "main.tex": "\\documentclass{article}\n\\usepackage{broken}\n\\begin{document}\nValid text.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "broken.sty",
+        "line": 2,
+        "token": "\\badpackage",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "package-source-explicit",
+    "files": {
+      "broken.sty": "\\ProvidesPackage{broken}\n\\badpackage\n",
+      "main.tex": "\\documentclass{article}\n\\usepackage{broken}\n\\begin{document}\nValid text.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "broken.sty",
+        "line": 2,
+        "token": "\\badpackage",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "root-in-subdirectory-classic",
+    "files": {
+      "src/main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\badsubdir after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "src/main.tex",
+        "line": 3,
+        "token": "\\badsubdir",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false,
+    "root": "src/main.tex"
+  },
+  {
+    "name": "root-in-subdirectory-explicit",
+    "files": {
+      "src/main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\badsubdir after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "src/main.tex",
+        "line": 3,
+        "token": "\\badsubdir",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true,
+    "root": "src/main.tex"
+  },
+  {
+    "name": "latexmk-change-directory-classic",
+    "files": {
+      "src/main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child}\n\\end{document}\n",
+      "src/child.tex": "Before \\badchangedir after.\n"
+    },
+    "expected": [
+      {
+        "file": "src/child.tex",
+        "line": 1,
+        "token": "\\badchangedir",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false,
+    "root": "src/main.tex",
+    "compiler_args": [
+      "-cd"
+    ]
+  },
+  {
+    "name": "latexmk-change-directory-explicit",
+    "files": {
+      "src/main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{child}\n\\end{document}\n",
+      "src/child.tex": "Before \\badchangedir after.\n"
+    },
+    "expected": [
+      {
+        "file": "src/child.tex",
+        "line": 1,
+        "token": "\\badchangedir",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true,
+    "root": "src/main.tex",
+    "compiler_args": [
+      "-cd"
+    ]
+  },
+  {
+    "name": "wrapped-long-path-classic",
+    "files": {
+      "nested-directory-0-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-1-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-2-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/child.tex": "Before \\badlongpath after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{nested-directory-0-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-1-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-2-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/child.tex}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "nested-directory-0-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-1-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-2-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/child.tex",
+        "line": 1,
+        "token": "\\badlongpath",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "wrapped-long-path-explicit",
+    "files": {
+      "nested-directory-0-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-1-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-2-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/child.tex": "Before \\badlongpath after.\n",
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{nested-directory-0-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-1-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-2-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/child.tex}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "nested-directory-0-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-1-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/nested-directory-2-aaaaaaaaaaaaaaaaaaaaaaaaaaaa/child.tex",
+        "line": 1,
+        "token": "\\badlongpath",
+        "occurrence": 1,
+        "message": "Undefined control sequence."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "missing-dollar-recovery-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nText x_1.\n\nNext paragraph.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": null,
+        "occurrence": 1,
+        "message": "Missing $ inserted."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": null,
+        "occurrence": 1,
+        "message": "Missing $ inserted."
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "missing-dollar-recovery-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nText x_1.\n\nNext paragraph.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": null,
+        "occurrence": 1,
+        "message": "Missing $ inserted."
+      },
+      {
+        "file": "main.tex",
+        "line": 4,
+        "token": null,
+        "occurrence": 1,
+        "message": "Missing $ inserted."
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "missing-input-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{definitely-missing-texlab-fixture}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "message": "LaTeX Error: File `definitely-missing-texlab-fixture.tex' not found."
+      },
+      {
+        "message": "Emergency stop."
+      },
+      {
+        "message": "Fatal error occurred, no output PDF file produced!"
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "missing-input-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\input{definitely-missing-texlab-fixture}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "message": "LaTeX Error: File `definitely-missing-texlab-fixture.tex' not found."
+      },
+      {
+        "message": "Emergency stop."
+      },
+      {
+        "message": "Fatal error occurred, no output PDF file produced!"
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "multiline-package-error-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\PackageError{sample}{First part\\MessageBreak second part}{Help}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": null,
+        "occurrence": 1,
+        "message": "Package sample Error: First part"
+      }
+    ],
+    "explicit": false
+  },
+  {
+    "name": "multiline-package-error-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\n\\PackageError{sample}{First part\\MessageBreak second part}{Help}\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "token": null,
+        "occurrence": 1,
+        "message": "Package sample Error: First part"
+      }
+    ],
+    "explicit": true
+  },
+  {
+    "name": "package-warning-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\PackageWarning{sample}{A warning on input line \\the\\inputlineno} after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "message": "Package sample Warning: A warning on input line 3 on input line 3.",
+        "severity": 2
+      }
+    ],
+    "explicit": false,
+    "success": true
+  },
+  {
+    "name": "package-warning-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\PackageWarning{sample}{A warning on input line \\the\\inputlineno} after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "message": "Package sample Warning: A warning on input line 3 on input line 3.",
+        "severity": 2
+      }
+    ],
+    "explicit": true,
+    "success": true
+  },
+  {
+    "name": "citation-warning-classic",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\cite{missing} after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "message": "LaTeX Warning: Citation `missing'",
+        "severity": 2
+      },
+      {
+        "file": "main.log",
+        "message": "LaTeX Warning: There were undefined references.",
+        "severity": 2
+      }
+    ],
+    "explicit": false,
+    "success": true
+  },
+  {
+    "name": "citation-warning-explicit",
+    "files": {
+      "main.tex": "\\documentclass{article}\n\\begin{document}\nBefore \\cite{missing} after.\n\\end{document}\n"
+    },
+    "expected": [
+      {
+        "file": "main.tex",
+        "line": 3,
+        "message": "LaTeX Warning: Citation `missing'",
+        "severity": 2
+      },
+      {
+        "file": "main.log",
+        "message": "LaTeX Warning: There were undefined references.",
+        "severity": 2
+      }
+    ],
+    "explicit": true,
+    "success": true
+  }
+]

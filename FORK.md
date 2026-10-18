@@ -9,7 +9,8 @@ The changes cover log parsing and diagnostic source ranges:
 - Read explicit `file:line: message` errors from `-file-line-error` logs, including
   wrapped headers, Windows paths, quoted paths and filenames with parentheses.
   Explicit locations take precedence over the traditional log file stack.
-- Recognize balanced parentheses in traditional log filenames. Keep consecutive
+- Recognize balanced parentheses and standard TeX extensions without case
+  sensitivity in traditional log filenames. Keep consecutive
   errors separate so an error without a line number cannot borrow a later
   error's location. Do not discard errors following lines ending in ellipses or
   lines at the default print width.
@@ -19,6 +20,10 @@ The changes cover log parsing and diagnostic source ranges:
 - Keep diagnostics whose source file is unavailable or whose line is out of
   range in the build log, with the reported file/line included in the message.
   Do not substitute the root source file's first line.
+- Resolve relative source paths against the companion `.fls` recorder's
+  working directory, falling back to the project compile directory. This covers
+  a main source in a subdirectory and `latexmk -cd`. Normalize `..` segments
+  without interpreting literal `#` or `%` in filenames as URI syntax.
 - Resolve parsed log errors against the current source text and project graph
   when publishing diagnostics. Source edits no longer reuse old byte ranges,
   and changing the log directory excludes diagnostics from orphaned logs.
@@ -59,7 +64,8 @@ Compiler warnings continue to use the traditional log parser.
 ## Limits
 
 TeX's traditional log syntax cannot reliably distinguish a file-stack closing
-parenthesis from arbitrary output such as `\typeout{)}`. Use `-file-line-error`
+parenthesis from arbitrary output such as `\typeout{)}` or an unquoted filename
+containing an unmatched parenthesis. Use `-file-line-error`
 with this fork for explicit error file/line locations. This option is not a
 workaround for the unpatched 5.26.0 server, which misses these errors.
 
@@ -82,12 +88,16 @@ locations, path quoting/parentheses, Windows paths, UTF-8 and tab context,
 ambiguous/truncated hints, invalid line numbers, unresolved source locations,
 source edits and changes to the configured log directory.
 
-Local validation passed all 403 workspace tests, including 24 added regressions.
-A real Neovim/latexmk run checked 14 cases: 11 exact undefined-command ranges and
-quickfix positions (including UTF-16 to UTF-8 conversion), missing-dollar and
-missing-brace smoke cases, and reproduction of the traditional-log ambiguity
-described above. The UTF-8 source case used XeLaTeX; the other compiler cases
-used pdfLaTeX. A separate real-build integration passed error clearing after
-source edits and output-directory changes, plus PDF-open/forward-search argument
-checks using fake viewer processes. GUI viewer and inverse-search behavior were
-not validated.
+Local validation passes all 420 workspace tests, including 17 additional
+regressions in the expanded test round. The dedicated
+[real LaTeX corner-case suite](tests/build_log/README.md) runs 39 scenarios in
+both traditional and `-file-line-error` modes: 76 pass, and two traditional-log
+ambiguities remain explicitly tracked as expected failures. Both corresponding
+explicit-location cases pass. That suite includes its TeX inputs, a standalone
+Neovim LSP runner, retained compiler logs and a machine-readable results report;
+see its README for reproduction commands, coverage and the omissions it found.
+
+The separate tex-tools.nvim real-build integration also passes source-edit and
+output-directory error clearing plus PDF-open/forward-search argument checks
+using fake viewer processes. GUI viewer and inverse-search behavior were not
+validated.

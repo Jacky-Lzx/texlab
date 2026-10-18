@@ -220,9 +220,13 @@ impl FileRange {
 fn file_name(log: &str, start: usize) -> Option<(PathBuf, usize)> {
     let line = log[start..].split(['\r', '\n']).next()?;
     let supported = |path: &str| {
-        [".tex", ".sty", ".cls"]
+        path.rsplit_once('.').is_some_and(|(_, extension)| {
+            [
+                "tex", "sty", "cls", "def", "ltx", "clo", "cfg", "fd", "lco", "rnw",
+            ]
             .iter()
-            .any(|ext| path.ends_with(ext))
+            .any(|ext| extension.eq_ignore_ascii_case(ext))
+        })
     };
     if let Some(quoted) = line.strip_prefix('"') {
         let end = quoted.find('"')?;
